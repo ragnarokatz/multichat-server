@@ -1,0 +1,37 @@
+{
+  "name": "postgres-api-template",
+  "version": "1.0.0",
+  "description": "a template web api service with postgres SQL as database",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm run jest",
+    "start": "node server.js",
+    "debug": "SET DEBUG=api:* & node server.js",
+    "eslint": "eslint",
+    "eslint-fix": "eslint --fix",
+    "lint": "npm run eslint",
+    "prettier": "prettier --write \"./**/*.{md,json,html,css,js,yml}\"",
+    "prettier-check": "prettier --check \"./**/*.{md,json,html,css,js,yml}\"",
+    "pretest": "npm run lint",
+    "jest": "jest -c jest.config.unit.js --",
+    "jest:e2e": "jest -c jest.config.e2e.js --forceExit --",
+    "coverage": "jest --collectCoverage -c jest.config.js --",
+    "jest-detect": "jest --detectOpenHandles --"
+  },
+  "author": "Bowei Yao",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "debug": "^4.3.2",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "joi": "^17.4.2",
+    "pg": "^8.7.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.2.0",
+    "jest": "^27.3.1",
+    "prettier": "^2.2.1",
+    "supertest": "^6.1.6"
+  }
+}
