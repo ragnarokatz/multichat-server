@@ -14,6 +14,11 @@ const createSchema = Joi.object({
     .min(8)
     .max(20)
     .required(),
+  confirmPassword: Joi.string()
+    .regex(/^[a-zA-Z0-9]*$/)
+    .min(8)
+    .max(20)
+    .required(),
   capacity: Joi.number().integer().min(2).max(20).required(),
 });
 
@@ -26,13 +31,19 @@ const entrySchema = Joi.object({
     .required(),
 });
 
-rooms = {};
+var rooms = {};
 
 module.exports.validateCreate = function (item) {
   return new Promise((resolve, reject) => {
     try {
-      result = Joi.attempt(item, createSchema);
-      resolve(result);
+      let result = Joi.attempt(item, createSchema);
+      if (item.password === item.confirmPassword) {
+        resolve(result);
+      } else {
+        let message = 'password does not match confirm password';
+        debug(message);
+        throw new Error(message);
+      }
     } catch (err) {
       debug(err);
       reject(err);
@@ -43,7 +54,7 @@ module.exports.validateCreate = function (item) {
 module.exports.validateEntry = function (item) {
   return new Promise((resolve, reject) => {
     try {
-      result = Joi.attempt(item, entrySchema);
+      let result = Joi.attempt(item, entrySchema);
       resolve(result);
     } catch (err) {
       debug(err);
@@ -58,7 +69,7 @@ module.exports.initialize = function () {
       .then((rooms) => {
         for (room in rooms) {
           room.members = {};
-          this.rooms[room.id] = room;
+          rooms[room.id] = room;
         }
         resolve();
       })
@@ -73,7 +84,7 @@ module.exports.createRoom = function (item) {
     db.createRoom(item)
       .then((room) => {
         room.members = {};
-        this.rooms[room.id] = room;
+        rooms[room.id] = room;
         resolve(room.id);
       })
       .catch((err) => {
@@ -84,7 +95,7 @@ module.exports.createRoom = function (item) {
 
 module.exports.closeRoom = function (roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in this.rooms) {
+    if (!roomId in rooms) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
@@ -93,7 +104,7 @@ module.exports.closeRoom = function (roomId) {
 
     db.closeRoom(roomId)
       .then((result) => {
-        let room = this.rooms[roomId];
+        let room = rooms[roomId];
         room.active = false;
         resolve(result);
       })
@@ -105,14 +116,14 @@ module.exports.closeRoom = function (roomId) {
 
 module.exports.verifyEntry = function (item) {
   return new Promise((resolve, reject) => {
-    if (!item.id in this.rooms) {
+    if (!item.id in rooms) {
       let message = `room not found for id ${item.id}`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let room = this.rooms[item.id];
+    let room = rooms[item.id];
 
     bcrypt
       .compare(item.password, room.passhash)
@@ -134,14 +145,14 @@ module.exports.verifyEntry = function (item) {
 
 module.exports.enterRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in this.rooms) {
+    if (!roomId in rooms) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let room = this.rooms[roomId];
+    let room = rooms[roomId];
     if (!room.active) {
       let message = `room ${roomId} is not active`;
       debug(message);
@@ -171,14 +182,14 @@ module.exports.enterRoom = function (username, roomId) {
 
 module.exports.leaveRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in this.rooms) {
+    if (!roomId in rooms) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let room = this.rooms[roomId];
+    let room = rooms[roomId];
     let members = room.members;
 
     if (!username in members) {
@@ -195,14 +206,14 @@ module.exports.leaveRoom = function (username, roomId) {
 
 module.exports.isInRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in this.rooms) {
+    if (!roomId in rooms) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let room = this.rooms[roomId];
+    let room = rooms[roomId];
     let members = room.members;
 
     if (!username in members) {

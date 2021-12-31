@@ -11,7 +11,7 @@ const chatSchema = Joi.object({
 module.exports.validateChat = function (item) {
   return new Promise((resolve, reject) => {
     try {
-      result = Joi.attempt(item, chatSchema);
+      let result = Joi.attempt(item, chatSchema);
       resolve(result);
     } catch (err) {
       debug(err);

@@ -82,6 +82,7 @@ app.post('/account/login', async (req, res) => {
           jwt
             .sign(req.body)
             .then((token) => {
+              debug(token);
               res.json({ token: token });
             })
             .catch((err) => {

@@ -22,7 +22,7 @@ CREATE TABLE rooms (
 
 CREATE TABLE chats (
     id serial PRIMARY KEY,
-    account_id int NOT NULL,
+    username varchar(16) NOT NULL,
     room_id int NOT NULL,
     content varchar(200) NOT NULL,
     sendtime timestamp NOT NULL

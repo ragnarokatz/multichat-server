@@ -34,7 +34,7 @@ const loginSchema = Joi.object({
     .required(),
 });
 
-accounts = {};
+var accounts = {};
 
 module.exports.validateRegister = function (item) {
   return new Promise((resolve, reject) => {
@@ -86,8 +86,9 @@ module.exports.registerAccount = function (item) {
 
 module.exports.verifyAccount = function (item) {
   return new Promise((resolve, reject) => {
-    if (item.username in this.accounts) {
+    if (item.username in accounts) {
       // if in cache
+      debug('found in accounts cache');
       let account = accounts[item.username];
       bcrypt
         .compare(item.password, account.passhash)
@@ -108,11 +109,13 @@ module.exports.verifyAccount = function (item) {
     }
 
     // otherwise look for it in db
+    debug('not found in accounts cache');
+
     db.verifyAccount(item)
       .then((account) => {
         // add to cache
         account.room_id = null;
-        this.accounts[account.username] = account;
+        accounts[account.username] = account;
         resolve(account);
       })
       .catch((err) => {
@@ -123,14 +126,14 @@ module.exports.verifyAccount = function (item) {
 
 module.exports.enterRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!username in this.accounts) {
+    if (!username in accounts) {
       let message = `user ${username} is not logged on`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let account = this.accounts[username];
+    let account = accounts[username];
     if (account.room_id != null) {
       let message = `user ${username} is already in room ${room_id}`;
       debug(message);
@@ -145,14 +148,14 @@ module.exports.enterRoom = function (username, roomId) {
 
 module.exports.leaveRoom = function (username) {
   return new Promise((resolve, reject) => {
-    if (!username in this.accounts) {
+    if (!username in accounts) {
       let message = `user ${username} is not logged on`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let account = this.accounts[username];
+    let account = accounts[username];
     if (account.room_id == null) {
       let message = `user ${username} is not in any room`;
       debug(message);
@@ -168,14 +171,14 @@ module.exports.leaveRoom = function (username) {
 
 module.exports.isInRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!username in this.accounts) {
+    if (!username in accounts) {
       let message = `user ${username} is not logged on`;
       debug(message);
       reject({ message: message });
       return;
     }
 
-    let account = this.accounts[username];
+    let account = accounts[username];
     if (account.room_id != roomId) {
       let message = `user ${username} is not in room ${roomId}`;
       debug(message);
