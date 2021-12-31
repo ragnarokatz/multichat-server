@@ -188,7 +188,7 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
 app.get('/room/:room_id', checkToken, async (req, res) => {
   debug('getting all the chats from a room');
   rooms
-    .isInRoom(account)
+    .getRoomId(account)
     .then((result) => {
       if (result) {
         chats
@@ -216,25 +216,10 @@ app.get('/room/:room_id', checkToken, async (req, res) => {
 
 app.put('/room/:room_id', checkToken, async (req, res) => {
   debug('leaving a room');
-  accounts
-    .getRoomId(account)
-    .then((roomId) => {
-      if (roomId === req.params.room_id) {
-        rooms
-          .leaveRoom(account)
-          .then((result) => {
-            res.json(result);
-          })
-          .catch((err) => {
-            res.status(404).json({
-              message: err,
-            });
-          });
-      } else {
-        res.status(404).json({
-          message: `user is currently not in room ${req.params.room_id}`,
-        });
-      }
+  rooms
+    .leaveRoom(account)
+    .then((result) => {
+      res.json(result);
     })
     .catch((err) => {
       res.status(404).json({

@@ -28,4 +28,3 @@ CREATE TABLE chats (
     content varchar(200) NOT NULL,
     sendtime timestamp NOT NULL
 );
-
