@@ -18,7 +18,7 @@ module.exports.verify = function (token) {
 
 module.exports.sign = function (payload) {
   return new Promise((resolve, reject) => {
-    jwt.sign(payload, SECRET, { expiresIn: '5m', algorithm: 'HS256' }, (err, token) => {
+    jwt.sign(payload, SECRET, { expiresIn: '1h', algorithm: 'HS256' }, (err, token) => {
       if (err) {
         debug(err);
         reject(err);

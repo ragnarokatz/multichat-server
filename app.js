@@ -77,7 +77,6 @@ app.post('/account/login', async (req, res) => {
         .verifyAccount(data)
         .then((result) => {
           debug(result);
-          req.body.id = result.id;
 
           jwt
             .sign(req.body)
@@ -231,5 +230,18 @@ app.use((req, res) => {
   debug('visiting non existing resource');
   res.status(404).send('Resource not found');
 });
+
+app.initialize = function () {
+  return new Promise((resolve, reject) => {
+    complex
+      .initialize()
+      .then(() => {
+        resolve();
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+};
 
 module.exports = app;

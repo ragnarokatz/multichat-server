@@ -74,6 +74,7 @@ module.exports.initialize = function () {
         resolve();
       })
       .catch((err) => {
+        debug(err);
         reject(err);
       });
   });
@@ -85,7 +86,7 @@ module.exports.createRoom = function (item) {
       .then((room) => {
         room.members = {};
         rooms[room.id] = room;
-        resolve(room.id);
+        resolve(room);
       })
       .catch((err) => {
         reject(err);
