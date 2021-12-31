@@ -141,26 +141,11 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
     .then((data) => {
       rooms
         .verifyEntry(data)
-        .then((result) => {
-          rooms
-            .isRoomAvailable(roomId)
+        .then(() => {
+          complex
+            .enterRoom(account_id, req.body.id)
             .then((result) => {
-              if (!result) {
-                res.status(404).json({
-                  message: `room ${req.params.room_id} is full`,
-                });
-                return;
-              }
-              rooms
-                .enterRoom(account_id, req.body.id)
-                .then((result) => {
-                  res.json(result);
-                })
-                .catch((err) => {
-                  res.status(404).json({
-                    message: err,
-                  });
-                });
+              res.json(result);
             })
             .catch((err) => {
               res.status(404).json({
@@ -183,25 +168,19 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
 
 app.get('/room/:room_id', checkToken, async (req, res) => {
   debug('getting all the chats from a room');
-  rooms
-    .getRoomId(account)
-    .then((result) => {
-      if (result) {
-        chats
-          .getChatsInRoom(req.params.room_id)
-          .then((data) => {
-            res.json({ chats: data });
-          })
-          .catch((err) => {
-            res.status(404).json({
-              message: err,
-            });
+  complex
+    .isInRoom(account, req.params.room_id)
+    .then(() => {
+      chats
+        .getChatsInRoom(req.params.room_id)
+        .then((data) => {
+          res.json({ chats: data });
+        })
+        .catch((err) => {
+          res.status(404).json({
+            message: err,
           });
-      } else {
-        res.status(404).json({
-          message: `user is currently not in room ${req.params.room_id}`,
         });
-      }
     })
     .catch((err) => {
       res.status(404).json({
@@ -212,10 +191,33 @@ app.get('/room/:room_id', checkToken, async (req, res) => {
 
 app.put('/room/:room_id', checkToken, async (req, res) => {
   debug('leaving a room');
-  rooms
+  complex
     .leaveRoom(account)
     .then((result) => {
       res.json(result);
+    })
+    .catch((err) => {
+      res.status(404).json({
+        message: err,
+      });
+    });
+});
+
+app.put('/chat/add', checkToken, async (req, res) => {
+  debug('posting a chat message');
+  complex
+    .isInRoom(account, req.params.room_id)
+    .then(() => {
+      chats
+        .addChat(req.body)
+        .then((result) => {
+          res.json(result);
+        })
+        .catch((err) => {
+          res.status(404).json({
+            message: err,
+          });
+        });
     })
     .catch((err) => {
       res.status(404).json({

@@ -165,3 +165,24 @@ module.exports.leaveRoom = function (username) {
     resolve(roomId);
   });
 };
+
+module.exports.isInRoom = function (username, roomId) {
+  return new Promise((resolve, reject) => {
+    if (!username in this.accounts) {
+      let message = `user ${username} is not logged on`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let account = this.accounts[username];
+    if (account.room_id != roomId) {
+      let message = `user ${username} is not in room ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    resolve();
+  });
+};

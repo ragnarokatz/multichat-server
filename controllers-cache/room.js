@@ -192,3 +192,26 @@ module.exports.leaveRoom = function (username, roomId) {
     resolve();
   });
 };
+
+module.exports.isInRoom = function (username, roomId) {
+  return new Promise((resolve, reject) => {
+    if (!roomId in this.rooms) {
+      let message = `room not found for id ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let room = this.rooms[roomId];
+    let members = room.members;
+
+    if (!username in members) {
+      let message = `${username} is not found in room ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    resolve();
+  });
+};

@@ -58,3 +58,23 @@ module.exports.leaveRoom = function () {
       });
   });
 };
+
+module.exports.isInRoom = function (username, roomId) {
+  return new Promise((resolve, reject) => {
+    accounts
+      .isInRoom(username, roomId)
+      .then(() => {
+        rooms
+          .isInRoom(username, roomId)
+          .then(() => {
+            resolve();
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+};
