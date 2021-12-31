@@ -193,7 +193,7 @@ module.exports.getRoomId = function (username) {
   });
 };
 
-module.exports.getPeopleCount = function(roomId) {
+module.exports.getPeopleCount = function (roomId) {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await pool.connect();
@@ -204,4 +204,4 @@ module.exports.getPeopleCount = function(roomId) {
       reject(err);
     }
   });
-}
+};
