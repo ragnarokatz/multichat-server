@@ -1,4 +1,4 @@
-const debug = require('debug')('api:controllers-db:chat');
+const debug = require('debug')('api:controllers-cache:chat');
 const Joi = require('joi');
 const db = require('../controllers-db/chat');
 

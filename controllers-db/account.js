@@ -39,7 +39,7 @@ module.exports.verifyAccount = function (item) {
       bcrypt
         .compare(item.password, account.passhash)
         .then((result) => {
-          if (!result) {
+          if (result) {
             resolve(account);
           } else {
             let message = 'incorrect password';

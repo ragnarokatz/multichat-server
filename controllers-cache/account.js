@@ -1,5 +1,6 @@
 const debug = require('debug')('api:controllers-cache:account');
 const Joi = require('joi');
+const bcrypt = require('bcrypt');
 const db = require('../controllers-db/account');
 
 const registerSchema = Joi.object({
@@ -79,8 +80,31 @@ module.exports.registerAccount = function (item) {
 
 module.exports.verifyAccount = function (item) {
   return new Promise((resolve, reject) => {
+    if (item.username in this.accounts) {
+        // if in cache
+        let account = accounts[item.username];
+        bcrypt
+        .compare(item.password, account.passhash)
+        .then((result) => {
+          if (result) {
+            resolve(account);
+          } else {
+            let message = 'incorrect password';
+            debug(message);
+            reject({ message: message });
+          }
+        })
+        .catch((err) => {
+          debug(err);
+          reject(err);
+        });
+        return;
+    }
+    
+    // otherwise look for it in db
     db.verifyAccount(item)
       .then((account) => {
+        // add to cache
         account.room_id = null;
         this.accounts[account.username] = account;
         resolve(account);
