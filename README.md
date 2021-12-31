@@ -1,10 +1,10 @@
-## Postgres API Template
+## Homemade authentication
 
-A template web api service with postgres SQL as database.
+A homemade authentication system using bcrypt.
 
 ### Application links
 
-- web-api: https://pg-api-template.herokuapp.com/
+- web-api: https://homemade-authentication.herokuapp.com/
 
 ### Database
 
@@ -37,11 +37,10 @@ A template web api service with postgres SQL as database.
 ### API
 
 - `/` GET - homepage
-- `/accounts` GET - get a list of accounts
-- `/accounts/add` POST - add an account
-- `/accounts/:account_id` PUT - update an account
-- `/accounts/:account_id` DEL - delete an account
-- `/accounts/:account_id` GET - get an account
+- `/protected` GET - protected page
+- `/account/register` POST - register an account
+- `/accounts/login` POST - authenticate an account
+- `/accounts/validate` POST - validate a token
 
 ### Dev environment setup
 

@@ -3,15 +3,17 @@ const request = require('supertest');
 const app = require('../../app');
 const pool = require('../../database/pool');
 
+let id = 0;
+
 beforeAll(async () => {
   try {
     const db = await pool.connect();
     await db.query(`CREATE TABLE IF NOT EXISTS accounts (
-    id serial PRIMARY KEY,
-    username varchar(12) NOT NULL,
-    description varchar(30) NOT NULL,
-    age int NOT NULL
-);`);
+      id serial PRIMARY KEY,
+      email varchar(30) NOT NULL UNIQUE,
+      passhash varchar(60) NOT NULL,
+      verified BOOLEAN NOT NULL DEFAULT FALSE
+  );`);
   } catch (err) {
     debug(err);
   }
@@ -19,6 +21,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   try {
+    // cleanup
+    let db = await pool.connect();
+    await db.query(`DELETE FROM accounts WHERE id = '${id}';`);
     await pool.close();
   } catch (err) {
     debug(err);
@@ -26,17 +31,27 @@ afterAll(async () => {
 });
 
 describe('api endpoint testing', () => {
-  let id = 0;
-  let testData = {
-    username: 'goodname',
-    description: 'good description',
-    age: 13,
+  let token;
+  let registerData = {
+    email: 'herpdaderp@gmail.com',
+    password: '1234Password',
+    confirmPassword: '1234Password',
   };
 
-  let badData = {
-    username: 'goodname',
-    description: 'good description_nope',
-    age: 13,
+  let badRegisterData = {
+    email: 'herpdaderp@gmail.com',
+    password: '1234Password',
+    confirmPassword: '34DSFsdfsfc',
+  };
+
+  let loginData = {
+    email: 'herpdaderp@gmail.com',
+    password: '1234Password',
+  };
+
+  let badLoginData = {
+    email: 'herpdaderp@gmail.com',
+    password: '34DSFsdfsfc',
   };
 
   it('visiting root', () => {
@@ -47,10 +62,14 @@ describe('api endpoint testing', () => {
     return request(app).get('/undefined').expect(404);
   });
 
-  it('adding account', (done) => {
+  it('visiting protected route', () => {
+    return request(app).get('/protected').expect(403);
+  });
+
+  it('registering account', (done) => {
     request(app)
-      .post('/accounts/add')
-      .send(testData)
+      .post('/account/register')
+      .send(registerData)
       .expect(200)
       .end((err, res) => {
         expect(res.body).toHaveProperty('id');
@@ -59,45 +78,39 @@ describe('api endpoint testing', () => {
       });
   });
 
-  it('adding account with bad data', () => {
-    return request(app).post('/accounts/add').send(badData).expect(404);
+  it('registering account with invalid credentials', () => {
+    request(app).post('/account/register').send(badRegisterData).expect(404);
   });
 
-  it('getting account', (done) => {
+  it('logging in with invalid credentials', () => {
+    request(app).post('/account/login').send(badLoginData).expect(404);
+  });
+
+  it('logging in with valid credentials', (done) => {
     request(app)
-      .get('/accounts/' + id)
+      .post('/account/login')
+      .send(loginData)
       .expect(200)
       .end((err, res) => {
-        expect(res.body).toMatchObject(testData);
+        expect(res.body).toHaveProperty('token');
+        token = res.body.token;
         done();
       });
   });
 
-  it('getting account that does not exist', () => {
-    return request(app).get('/accounts/9571234').expect(404);
+  it('validating a valid token', () => {
+    request(app).post('/account/validate').send({ token: token }).expect(404);
   });
 
-  it('getting all accounts', () => {
-    return request(app).get('/accounts').expect(200);
-  });
-
-  it('updating account', () => {
-    return request(app)
-      .put('/accounts/' + id)
-      .send(testData)
-      .expect(200);
-  });
-
-  it('updating account with bad data', () => {
-    return request(app)
-      .put('/accounts/' + id)
-      .send(badData)
+  it('validating an invalid token', () => {
+    request(app)
+      .post('/account/validate')
+      .send({ token: '198347189ksdfjklwior5.o0234-sdfa' })
       .expect(404);
   });
 
-  it('deleting account', () => {
-    return request(app)
-      .delete('/accounts/' + id)
-      .expect(200);
+  it('visiting protected route', () => {
+    console.log(token);
+    return request(app).get('/protected').set('Authorization', `Bearer ${token}`).expect(200);
   });
 });

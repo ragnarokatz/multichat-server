@@ -1,7 +1,7 @@
 {
-  "name": "postgres-api-template",
+  "name": "homemade-authentication",
   "version": "1.0.0",
-  "description": "a template web api service with postgres SQL as database",
+  "description": "homemade authentication system",
   "main": "server.js",
   "scripts": {
     "test": "npm run jest",
@@ -21,11 +21,13 @@
   "author": "Bowei Yao",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "debug": "^4.3.2",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "joi": "^17.4.2",
+    "jsonwebtoken": "^8.5.1",
     "pg": "^8.7.1"
   },
   "devDependencies": {

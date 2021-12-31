@@ -11,96 +11,126 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const accounts = require('./controllers/account');
+const jwt = require('./utils/jwt');
+
+const checkToken = (req, res, next) => {
+  const header = req.headers['authorization'];
+  if (typeof header == 'undefined' || header == null) {
+    res.status(403).json({
+      message: `invalid header`,
+    });
+  } else {
+    const bearer = header.split(' ');
+    const token = bearer[1];
+
+    jwt
+      .verify(token)
+      .then((data) => {
+        next();
+      })
+      .catch((err) => {
+        res.status(403).json({
+          message: err,
+        });
+      });
+  }
+};
 
 app.get('/', (req, res) => {
   debug('visiting root');
   res.sendFile(path.join(__dirname, '/index.html'));
 });
 
-app.get('/accounts', (req, res) => {
-  debug('retrieving all accounts');
-  accounts
-    .getAllAccounts()
-    .then((data) => {
-      res.json(data);
-    })
-    .catch((error) =>
-      res.status(404).json({
-        message: error,
-      })
-    );
+app.get('/protected', checkToken, (req, res) => {
+  debug('visiting protected route');
+  res.sendFile(path.join(__dirname, '/protected.html'));
 });
 
-app.post('/accounts/add', async (req, res) => {
-  debug('adding account');
+app.post('/account/register', async (req, res) => {
+  debug('registering an account');
   accounts
-    .validateAccount(req.body)
+    .validateRegister(req.body)
     .then((data) => {
       accounts
-        .addAccount(data)
+        .registerAccount(data)
         .then((result) => {
           res.json(result);
         })
-        .catch((error) =>
+        .catch((err) => {
           res.status(404).json({
-            message: error,
-          })
-        );
+            message: err,
+          });
+        });
     })
-    .catch((error) =>
+    .catch((err) => {
       res.status(404).json({
-        message: error,
-      })
-    );
+        message: err,
+      });
+    });
 });
 
-app.get('/accounts/:account_id', async (req, res) => {
-  debug('getting account with id ' + req.params.account_id);
+app.post('/account/login', async (req, res) => {
+  debug('login with an account');
   accounts
-    .getAccount(req.params.account_id)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch((error) =>
-      res.status(404).json({
-        message: error,
-      })
-    );
-});
-
-app.put('/accounts/:account_id', async (req, res) => {
-  debug('updating account with id ' + req.params.account_id);
-  accounts
-    .validateAccount(req.body)
+    .validateLogin(req.body)
     .then((data) => {
       accounts
-        .updateAccount(req.params.account_id, data)
+        .verifyAccount(data)
         .then((result) => {
-          res.json(result);
+          debug(result);
+
+          jwt
+            .sign(req.body)
+            .then((token) => {
+              res.json({ token: token });
+            })
+            .catch((err) => {
+              res.status(404).json({
+                message: err,
+              });
+            });
         })
-        .catch((error) =>
+        .catch((err) =>
           res.status(404).json({
-            message: error,
+            message: err,
           })
         );
     })
-    .catch((error) =>
+    .catch((err) =>
       res.status(404).json({
-        message: error,
+        message: err,
       })
     );
 });
 
-app.delete('/accounts/:account_id', async (req, res) => {
-  debug('deleting account with id ' + req.params.account_id);
+app.post('/account/validate', async (req, res) => {
+  debug('validate a jwt token');
   accounts
-    .deleteAccount(req.params.account_id)
-    .then((result) => {
-      res.json(result);
+    .validateToken(req.body)
+    .then((data) => {
+      jwt
+        .verify(data.token)
+        .then((decoded) => {
+          jwt
+            .sign(decoded)
+            .then((token) => {
+              res.json({ token: token });
+            })
+            .catch((err) => {
+              res.status(404).json({
+                message: err,
+              });
+            });
+        })
+        .catch((err) => {
+          res.status(404).json({
+            message: err,
+          });
+        });
     })
-    .catch((error) =>
+    .catch((err) =>
       res.status(404).json({
-        message: error,
+        message: err,
       })
     );
 });
