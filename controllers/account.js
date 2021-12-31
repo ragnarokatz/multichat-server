@@ -123,7 +123,7 @@ module.exports.verifyAccount = function (item) {
         .compare(item.password, account.passhash)
         .then((result) => {
           if (result == true) {
-            resolve(result);
+            resolve(account.id);
           } else {
             let message = 'incorrect password';
             debug(message);

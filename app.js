@@ -78,6 +78,7 @@ app.post('/account/login', async (req, res) => {
         .verifyAccount(data)
         .then((result) => {
           debug(result);
+          req.body.id = result;
 
           jwt
             .sign(req.body)
