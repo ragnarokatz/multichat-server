@@ -168,8 +168,12 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
 
 app.get('/room/:room_id', checkToken, async (req, res) => {
   debug('getting all the chats from a room');
+
+  let account = res.locals.decoded;
+  debug(account.username);
+  debug(req.params.room_id);
   complex
-    .isInRoom(account, req.params.room_id)
+    .isInRoom(account.username, req.params.room_id)
     .then(() => {
       chats
         .getChatsInRoom(req.params.room_id)

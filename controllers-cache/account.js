@@ -126,7 +126,7 @@ module.exports.verifyAccount = function (item) {
 
 module.exports.enterRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!username in accounts) {
+    if (!(username in accounts)) {
       let message = `user ${username} is not logged on`;
       debug(message);
       reject({ message: message });
@@ -148,7 +148,7 @@ module.exports.enterRoom = function (username, roomId) {
 
 module.exports.leaveRoom = function (username) {
   return new Promise((resolve, reject) => {
-    if (!username in accounts) {
+    if (!(username in accounts)) {
       let message = `user ${username} is not logged on`;
       debug(message);
       reject({ message: message });
@@ -171,7 +171,10 @@ module.exports.leaveRoom = function (username) {
 
 module.exports.isInRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!username in accounts) {
+    debug(username);
+    debug(accounts);
+    if (!(username in accounts)) {
+      debug('name not found in accounts');
       let message = `user ${username} is not logged on`;
       debug(message);
       reject({ message: message });
@@ -179,6 +182,9 @@ module.exports.isInRoom = function (username, roomId) {
     }
 
     let account = accounts[username];
+    debug(account);
+    debug(account.room_id);
+    debug(roomId);
     if (account.room_id != roomId) {
       let message = `user ${username} is not in room ${roomId}`;
       debug(message);

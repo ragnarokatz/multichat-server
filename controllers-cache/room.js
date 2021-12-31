@@ -96,7 +96,7 @@ module.exports.createRoom = function (item) {
 
 module.exports.closeRoom = function (roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in rooms) {
+    if (!(roomId in rooms)) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
@@ -117,7 +117,7 @@ module.exports.closeRoom = function (roomId) {
 
 module.exports.verifyEntry = function (item) {
   return new Promise((resolve, reject) => {
-    if (!item.id in rooms) {
+    if (!(item.id in rooms)) {
       let message = `room not found for id ${item.id}`;
       debug(message);
       reject({ message: message });
@@ -146,7 +146,7 @@ module.exports.verifyEntry = function (item) {
 
 module.exports.enterRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in rooms) {
+    if (!(roomId in rooms)) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
@@ -183,7 +183,7 @@ module.exports.enterRoom = function (username, roomId) {
 
 module.exports.leaveRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in rooms) {
+    if (!(roomId in rooms)) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
@@ -193,7 +193,7 @@ module.exports.leaveRoom = function (username, roomId) {
     let room = rooms[roomId];
     let members = room.members;
 
-    if (!username in members) {
+    if (!(username in members)) {
       let message = `${username} is not found in room ${roomId}`;
       debug(message);
       reject({ message: message });
@@ -207,7 +207,7 @@ module.exports.leaveRoom = function (username, roomId) {
 
 module.exports.isInRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    if (!roomId in rooms) {
+    if (!(roomId in rooms)) {
       let message = `room not found for id ${roomId}`;
       debug(message);
       reject({ message: message });
@@ -217,7 +217,7 @@ module.exports.isInRoom = function (username, roomId) {
     let room = rooms[roomId];
     let members = room.members;
 
-    if (!username in members) {
+    if (!(username in members)) {
       let message = `${username} is not found in room ${roomId}`;
       debug(message);
       reject({ message: message });
