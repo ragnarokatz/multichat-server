@@ -3,7 +3,11 @@ const Joi = require('joi');
 const db = require('../controllers-db/chat');
 
 const chatSchema = Joi.object({
-  account_id: Joi.number().integer().required(),
+  username: Joi.string()
+    .regex(/^[a-zA-Z0-9]*$/)
+    .min(4)
+    .max(16)
+    .required(),
   room_id: Joi.number().integer().required(),
   content: Joi.string().min(1).max(200).required(),
 });

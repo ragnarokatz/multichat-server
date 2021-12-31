@@ -131,7 +131,7 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
 
   if (req.params.room_id !== req.body.id) {
     res.status(404).json({
-      message: 'mismatch room id in params and req body',
+      message: 'mismatching room id in params and req body',
     });
     return;
   }
@@ -168,10 +168,8 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
 
 app.get('/room/:room_id', checkToken, async (req, res) => {
   debug('getting all the chats from a room');
-
   let account = res.locals.decoded;
-  debug(account.username);
-  debug(req.params.room_id);
+
   complex
     .isInRoom(account.username, req.params.room_id)
     .then(() => {
@@ -207,15 +205,33 @@ app.put('/room/:room_id', checkToken, async (req, res) => {
     });
 });
 
-app.put('/chat/add', checkToken, async (req, res) => {
+app.post('/chat/add', checkToken, async (req, res) => {
   debug('posting a chat message');
-  complex
-    .isInRoom(account, req.params.room_id)
-    .then(() => {
-      chats
-        .addChat(req.body)
-        .then((result) => {
-          res.json(result);
+  let account = res.locals.decoded;
+
+  chats
+    .validateChat(req.body)
+    .then((data) => {
+      if (data.username !== account.username) {
+        res.status(404).json({
+          message: 'mismatching username in authorization and req body',
+        });
+        return;
+      }
+
+      complex
+        .isInRoom(account.username, data.room_id)
+        .then(() => {
+          chats
+            .addChat(req.body)
+            .then((result) => {
+              res.json(result);
+            })
+            .catch((err) => {
+              res.status(404).json({
+                message: err,
+              });
+            });
         })
         .catch((err) => {
           res.status(404).json({
