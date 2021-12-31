@@ -65,12 +65,13 @@ module.exports.validateEntry = function (item) {
 
 module.exports.initialize = function () {
   return new Promise((resolve, reject) => {
+    debug("initialize room");
     db.getAllRooms()
-      .then((rooms) => {
-        for (room in rooms) {
+      .then((data) => {
+        data.forEach((room) => {
           room.members = {};
           rooms[room.id] = room;
-        }
+        })
         resolve();
       })
       .catch((err) => {
@@ -130,6 +131,7 @@ module.exports.verifyEntry = function (item) {
       .compare(item.password, room.passhash)
       .then((result) => {
         if (result) {
+          debug(`successfully verified room entry for id ${item.id}`);
           resolve(result);
         } else {
           let message = 'incorrect password';
@@ -176,6 +178,7 @@ module.exports.enterRoom = function (username, roomId) {
       return;
     }
 
+    debug('room enter room successful');
     members[username] = 1;
     resolve();
   });

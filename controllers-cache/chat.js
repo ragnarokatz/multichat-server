@@ -26,6 +26,7 @@ module.exports.validateChat = function (item) {
 
 module.exports.initialize = function () {
   return new Promise((resolve, reject) => {
+    debug("initialize chat");
     resolve();
   });
 };

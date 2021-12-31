@@ -5,6 +5,7 @@ const accounts = require('./account');
 
 module.exports.initialize = function () {
   return new Promise((resolve, reject) => {
+    debug("initialize complex");
     let initAccount = accounts.initialize();
     let initChat = chats.initialize();
     let initRoom = rooms.initialize();

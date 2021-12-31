@@ -68,6 +68,7 @@ module.exports.validateLogin = function (item) {
 
 module.exports.initialize = function () {
   return new Promise((resolve, reject) => {
+    debug("initialize account");
     resolve();
   });
 };
@@ -141,6 +142,7 @@ module.exports.enterRoom = function (username, roomId) {
       return;
     }
 
+    debug('account enter room successful');
     account.room_id = roomId;
     resolve();
   });

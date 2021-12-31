@@ -129,12 +129,14 @@ app.post('/room/create', checkToken, async (req, res) => {
 app.post('/room/:room_id', checkToken, async (req, res) => {
   debug('entering a room');
 
-  if (req.params.room_id !== req.body.id) {
+  if (req.params.room_id != req.body.id) {
     res.status(404).json({
       message: 'mismatching room id in params and req body',
     });
     return;
   }
+
+  let account = res.locals.decoded;
 
   rooms
     .validateEntry(req.body)
@@ -143,9 +145,11 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
         .verifyEntry(data)
         .then(() => {
           complex
-            .enterRoom(account_id, req.body.id)
-            .then((result) => {
-              res.json(result);
+            .enterRoom(account.username, req.body.id)
+            .then(() => {
+              let message = `${account.username} successfully entered room ${req.body.id}`;
+              debug(message);
+              res.json({message: message});
             })
             .catch((err) => {
               res.status(404).json({
