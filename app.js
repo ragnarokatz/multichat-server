@@ -10,9 +10,9 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const accounts = require('./controllers/account');
-const rooms = require('./controllers/room');
-const chats = require('./controllers/chat');
+const accounts = require('./controllers-cache/account');
+const rooms = require('./controllers-cache/room');
+const chats = require('./controllers-cache/chat');
 const jwt = require('./utils/jwt');
 
 const checkToken = (req, res, next) => {
@@ -42,11 +42,6 @@ const checkToken = (req, res, next) => {
 app.get('/', (req, res) => {
   debug('visiting root');
   res.sendFile(path.join(__dirname, '/index.html'));
-});
-
-app.get('/protected', checkToken, (req, res) => {
-  debug('visiting protected route');
-  res.sendFile(path.join(__dirname, '/protected.html'));
 });
 
 app.post('/account/register', async (req, res) => {
@@ -81,7 +76,7 @@ app.post('/account/login', async (req, res) => {
         .verifyAccount(data)
         .then((result) => {
           debug(result);
-          req.body.id = result;
+          req.body.id = result.id;
 
           jwt
             .sign(req.body)

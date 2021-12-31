@@ -1,9 +1,9 @@
-const debug = require('debug')('api:controllers:room');
+const debug = require('debug')('api:controllers-db:room');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const pool = require('../database/pool');
 
-const ROUNDS = 10;
+const ROUNDS = process.env.ROUNDS || 10;
 
 const createSchema = Joi.object({
   roomname: Joi.string()
@@ -27,6 +27,8 @@ const entrySchema = Joi.object({
     .max(20)
     .required(),
 });
+
+var rooms = {};
 
 module.exports.validateCreate = function (item) {
   return new Promise((resolve, reject) => {

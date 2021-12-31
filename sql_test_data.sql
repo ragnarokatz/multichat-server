@@ -10,7 +10,6 @@ CREATE TABLE accounts (
     username varchar(16) NOT NULL UNIQUE,
     passhash varchar(60) NOT NULL,
     verified boolean NOT NULL DEFAULT FALSE,
-    room_id int DEFAULT NULL
 );
 
 CREATE TABLE rooms (
