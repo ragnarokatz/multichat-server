@@ -20,6 +20,12 @@ module.exports.validateChat = function (item) {
   });
 };
 
+module.exports.initialize = function () {
+  return new Promise((resolve, reject) => {
+    resolve();
+  });
+};
+
 module.exports.addChat = function (item) {
   return new Promise((resolve, reject) => {
     db.addChat(item)

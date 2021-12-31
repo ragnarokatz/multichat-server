@@ -3,8 +3,6 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const db = require('../controllers-db/room');
 
-const ROUNDS = process.env.ROUNDS || 10;
-
 const createSchema = Joi.object({
   roomname: Joi.string()
     .regex(/^[a-zA-Z0-9]*$/)
@@ -59,7 +57,7 @@ module.exports.initialize = function () {
     db.getAllRooms()
       .then((rooms) => {
         for (room in rooms) {
-          room.count = 0;
+          room.members = {};
           this.rooms[room.id] = room;
         }
         resolve();
@@ -74,7 +72,7 @@ module.exports.createRoom = function (item) {
   return new Promise((resolve, reject) => {
     db.createRoom(item)
       .then((room) => {
-        room.count = 0;
+        room.members = {};
         this.rooms[room.id] = room;
         resolve(room.id);
       })
@@ -115,19 +113,6 @@ module.exports.verifyEntry = function (item) {
     }
 
     let room = this.rooms[item.id];
-    if (!room.active) {
-      let message = `room ${item.id} is not active`;
-      debug(message);
-      reject({ message: message });
-      return;
-    }
-
-    if (room.count >= room.capacity) {
-      let message = `room ${item.id} is full`;
-      debug(message);
-      reject({ message: message });
-      return;
-    }
 
     bcrypt
       .compare(item.password, room.passhash)
@@ -149,14 +134,61 @@ module.exports.verifyEntry = function (item) {
 
 module.exports.enterRoom = function (username, roomId) {
   return new Promise((resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let sql = `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`;
-      let result = await db.query(sql);
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
+    if (!roomId in this.rooms) {
+      let message = `room not found for id ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
     }
+
+    let room = this.rooms[roomId];
+    if (!room.active) {
+      let message = `room ${roomId} is not active`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let members = room.members;
+    if (Object.keys(members).length >= room.capacity) {
+      let message = `room ${roomId} is full`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    if (username in members) {
+      let message = `${username} is already in room ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    members[username] = 1;
+    resolve();
+  });
+};
+
+module.exports.leaveRoom = function (username, roomId) {
+  return new Promise((resolve, reject) => {
+    if (!roomId in this.rooms) {
+      let message = `room not found for id ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let room = this.rooms[roomId];
+    let members = room.members;
+
+    if (!username in members) {
+      let message = `${username} is not found in room ${roomId}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    delete members[username];
+    resolve();
   });
 };

@@ -13,6 +13,7 @@ app.use(cors());
 const accounts = require('./controllers-cache/account');
 const rooms = require('./controllers-cache/room');
 const chats = require('./controllers-cache/chat');
+const complex = require('./controllers-cache/complex');
 const jwt = require('./utils/jwt');
 
 const checkToken = (req, res, next) => {

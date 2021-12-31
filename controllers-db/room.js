@@ -47,31 +47,3 @@ module.exports.closeRoom = function (roomId) {
     }
   });
 };
-
-module.exports.enterRoom = function (username, roomId) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let sql = `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`;
-      let result = await db.query(sql);
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.leaveRoom = function (username) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let sql = `UPDATE accounts SET room_id=NULL WHERE username = '${username}';`;
-      let result = await db.query(sql);
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};

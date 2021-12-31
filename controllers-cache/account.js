@@ -66,6 +66,12 @@ module.exports.validateLogin = function (item) {
   });
 };
 
+module.exports.initialize = function () {
+  return new Promise((resolve, reject) => {
+    resolve();
+  });
+};
+
 module.exports.registerAccount = function (item) {
   return new Promise((resolve, reject) => {
     db.registerAccount(item)
@@ -112,5 +118,50 @@ module.exports.verifyAccount = function (item) {
       .catch((err) => {
         reject(err);
       });
+  });
+};
+
+module.exports.enterRoom = function (username, roomId) {
+  return new Promise((resolve, reject) => {
+    if (!username in this.accounts) {
+      let message = `user ${username} is not logged on`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let account = this.accounts[username];
+    if (account.room_id != null) {
+      let message = `user ${username} is already in room ${room_id}`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    account.room_id = roomId;
+    resolve();
+  });
+};
+
+module.exports.leaveRoom = function (username) {
+  return new Promise((resolve, reject) => {
+    if (!username in this.accounts) {
+      let message = `user ${username} is not logged on`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let account = this.accounts[username];
+    if (account.room_id == null) {
+      let message = `user ${username} is not in any room`;
+      debug(message);
+      reject({ message: message });
+      return;
+    }
+
+    let roomId = account.room_id;
+    account.room_id = null;
+    resolve(roomId);
   });
 };
