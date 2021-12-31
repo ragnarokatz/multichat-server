@@ -11,6 +11,8 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const accounts = require('./controllers/account');
+const rooms = require('./controllers/room');
+const chats = require('./controllers/chat');
 const jwt = require('./utils/jwt');
 
 const checkToken = (req, res, next) => {
@@ -25,7 +27,7 @@ const checkToken = (req, res, next) => {
 
     jwt
       .verify(token)
-      .then((data) => {
+      .then((decoded) => {
         next();
       })
       .catch((err) => {
@@ -104,24 +106,15 @@ app.post('/account/login', async (req, res) => {
     );
 });
 
-app.post('/account/validate', async (req, res) => {
-  debug('validate a jwt token');
-  accounts
-    .validateToken(req.body)
+app.post('/room/create', checkToken, async (req, res) => {
+  debug('creating a room');
+  rooms
+    .validateCreate(req.body)
     .then((data) => {
-      jwt
-        .verify(data.token)
-        .then((decoded) => {
-          jwt
-            .sign(decoded)
-            .then((token) => {
-              res.json({ token: token });
-            })
-            .catch((err) => {
-              res.status(404).json({
-                message: err,
-              });
-            });
+      rooms
+        .createRoom(data)
+        .then((result) => {
+          res.json(result);
         })
         .catch((err) => {
           res.status(404).json({
@@ -129,11 +122,79 @@ app.post('/account/validate', async (req, res) => {
           });
         });
     })
-    .catch((err) =>
+    .catch((err) => {
       res.status(404).json({
         message: err,
-      })
-    );
+      });
+    });
+});
+
+app.post('/room/:room_id', checkToken, async (req, res) => {
+  debug('entering a room');
+
+  if (req.params.room_id !== req.body.id) {
+    res.status(404).json({
+      message: 'mismatch room id in params and req body',
+    });
+    return;
+  }
+
+  chats
+    .validateEntry(req.body)
+    .then((data) => {
+      chats
+        .verifyEntry(data)
+        .then((result) => {
+          accounts
+            .enterRoom(account_id, req.body.id)
+            .then((result) => {
+              res.json(result);
+            })
+            .catch((err) => {
+              res.status(404).json({
+                message: err,
+              });
+            });
+        })
+        .catch((err) =>
+          res.status(404).json({
+            message: err,
+          })
+        );
+    })
+    .catch((err) => {
+      res.status(404).json({
+        message: err,
+      });
+    });
+});
+
+app.get('/room/:room_id', checkToken, async (req, res) => {
+  debug('getting all the chats from a room');
+  chats
+    .getRoomChats(req.params.room_id)
+    .then((data) => {
+      res.json({ chats: data });
+    })
+    .catch((err) => {
+      res.status(404).json({
+        message: err,
+      });
+    });
+});
+
+app.get('/room/:room_id', checkToken, async (req, res) => {
+  debug('getting all the chats from a room');
+  chats
+    .getRoomChats(req.params.room_id)
+    .then((data) => {
+      res.json({ chats: data });
+    })
+    .catch((err) => {
+      res.status(404).json({
+        message: err,
+      });
+    });
 });
 
 app.use((req, res) => {

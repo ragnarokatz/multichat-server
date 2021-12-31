@@ -37,3 +37,17 @@ module.exports.addChat = function (item) {
     }
   });
 };
+
+module.exports.getRoomChats = function (roomId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let sql = `SELECT * FROM chats WHERE room_id = '${roomId}';`;
+      let result = await db.query(sql);
+      resolve(result.rows);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};
