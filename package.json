@@ -1,7 +1,7 @@
 {
-  "name": "homemade-authentication",
+  "name": "multichat-server",
   "version": "1.0.0",
-  "description": "homemade authentication system",
+  "description": "server hosting multiple chatrooms",
   "main": "server.js",
   "scripts": {
     "test": "npm run jest",

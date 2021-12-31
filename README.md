@@ -1,10 +1,10 @@
-## Homemade authentication
+## Multichat server
 
-A homemade authentication system using bcrypt.
+A server hosting multiple chatrooms.
 
 ### Application links
 
-- web-api: https://homemade-authentication.herokuapp.com/
+- web-api: https://multichat-server.herokuapp.com/
 
 ### Database
 
