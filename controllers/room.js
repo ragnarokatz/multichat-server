@@ -6,10 +6,10 @@ const pool = require('../database/pool');
 const ROUNDS = 10;
 
 const registerSchema = Joi.object({
-  username: Joi.string()
-    .regex(/^[a-zA-Z0-9]*$/)
-    .min(4)
-    .max(16)
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
+    .min(10)
+    .max(30)
     .required(),
   password: Joi.string()
     .regex(/^[a-zA-Z0-9]*$/)
@@ -24,10 +24,10 @@ const registerSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-  username: Joi.string()
-    .regex(/^[a-zA-Z0-9]*$/)
-    .min(4)
-    .max(16)
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
+    .min(10)
+    .max(30)
     .required(),
   password: Joi.string()
     .regex(/^[a-zA-Z0-9]*$/)
@@ -93,7 +93,7 @@ module.exports.registerAccount = function (item) {
       const db = await pool.connect();
       let salt = await bcrypt.genSalt(ROUNDS);
       let passhash = await bcrypt.hash(item.password, salt);
-      var sql = `INSERT INTO accounts (username, passhash) VALUES ('${item.username}', '${passhash}') RETURNING id;`;
+      var sql = `INSERT INTO accounts (email, passhash) VALUES ('${item.email}', '${passhash}') RETURNING id;`;
       let result = await db.query(sql);
       resolve(result.rows[0]);
     } catch (err) {
@@ -107,14 +107,14 @@ module.exports.verifyAccount = function (item) {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await pool.connect();
-      let accounts = await db.query(`SELECT * FROM accounts WHERE username = '${item.username}';`);
+      let accounts = await db.query(`SELECT * FROM accounts WHERE email = '${item.email}';`);
       if (accounts.rowCount == 0) {
-        let err = 'account not found for username ' + item.username;
+        let err = 'account not found for email ' + item.email;
         reject(err);
       }
 
       if (accounts.rowCount > 1) {
-        let err = 'multiple accounts found for username ' + item.username;
+        let err = 'multiple accounts found for email ' + item.email;
         reject(err);
       }
 
@@ -134,60 +134,6 @@ module.exports.verifyAccount = function (item) {
           debug(err);
           reject(err);
         });
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.getRoomId = function (username) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let roomIds = await db.query(`SELECT room_id FROM accounts WHERE username = '${username}';`);
-      if (roomIds.rowCount == 0) {
-        let err = 'account not found for username ' + username;
-        reject(err);
-      }
-
-      if (roomIds.rowCount > 1) {
-        let err = 'multiple accounts found for username ' + username;
-        reject(err);
-      }
-
-      let roomId = roomIds.rows[0];
-      resolve(roomId);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.enterRoom = function (username, roomId) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      const result = await db.query(
-        `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`
-      );
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.leaveRoom = function (username) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      const result = await db.query(
-        `UPDATE accounts SET room_id=NULL WHERE username = '${username}';`
-      );
-      resolve(result);
     } catch (err) {
       debug(err);
       reject(err);
