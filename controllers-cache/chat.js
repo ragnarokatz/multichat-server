@@ -21,7 +21,7 @@ module.exports.validateChat = function (item) {
 };
 
 module.exports.addChat = function (item) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     db.addChat(item)
       .then((id) => {
         resolve(id);
@@ -33,7 +33,7 @@ module.exports.addChat = function (item) {
 };
 
 module.exports.getChatsInRoom = function (roomId) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     db.getChatsInRoom(roomId)
       .then((chats) => {
         resolve(chats);

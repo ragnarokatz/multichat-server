@@ -81,9 +81,9 @@ module.exports.registerAccount = function (item) {
 module.exports.verifyAccount = function (item) {
   return new Promise((resolve, reject) => {
     if (item.username in this.accounts) {
-        // if in cache
-        let account = accounts[item.username];
-        bcrypt
+      // if in cache
+      let account = accounts[item.username];
+      bcrypt
         .compare(item.password, account.passhash)
         .then((result) => {
           if (result) {
@@ -98,9 +98,9 @@ module.exports.verifyAccount = function (item) {
           debug(err);
           reject(err);
         });
-        return;
+      return;
     }
-    
+
     // otherwise look for it in db
     db.verifyAccount(item)
       .then((account) => {
