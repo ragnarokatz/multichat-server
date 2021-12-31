@@ -17,7 +17,6 @@ CREATE TABLE rooms (
     id serial PRIMARY KEY,
     roomname varchar(16) NOT NULL UNIQUE,
     passhash varchar(60) NOT NULL,
-    protected boolean NOT NULL DEFAULT FALSE,
     capacity int NOT NULL,
     active boolean NOT NULL DEFAULT TRUE
 );

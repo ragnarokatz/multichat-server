@@ -1,33 +1,26 @@
-const debug = require('debug')('api:controllers:account');
+const debug = require('debug')('api:controllers:room');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const pool = require('../database/pool');
 
 const ROUNDS = 10;
 
-const registerSchema = Joi.object({
-  email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
-    .min(10)
-    .max(30)
+const createSchema = Joi.object({
+    roomname: Joi.string()
+    .regex(/^[a-zA-Z0-9]*$/)
+    .min(4)
+    .max(16)
     .required(),
   password: Joi.string()
     .regex(/^[a-zA-Z0-9]*$/)
     .min(8)
     .max(20)
     .required(),
-  confirmPassword: Joi.string()
-    .regex(/^[a-zA-Z0-9]*$/)
-    .min(8)
-    .max(20)
-    .required(),
+    capacity: Joi.number().integer().min(2).max(20).required(),
 });
 
-const loginSchema = Joi.object({
-  email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
-    .min(10)
-    .max(30)
+const entrySchema = Joi.object({
+    id: Joi.number().integer()
     .required(),
   password: Joi.string()
     .regex(/^[a-zA-Z0-9]*$/)
@@ -36,37 +29,10 @@ const loginSchema = Joi.object({
     .required(),
 });
 
-const tokenSchema = Joi.object({
-  token: Joi.string()
-    .regex(/^[a-zA-Z0-9.-_]*$/)
-    .min(50)
-    .max(225)
-    .required(),
-});
-
-module.exports.validateRegister = function (item) {
+module.exports.validateCreate = function (item) {
   return new Promise((resolve, reject) => {
     try {
-      result = Joi.attempt(item, registerSchema);
-
-      if (item.password === item.confirmPassword) {
-        resolve(result);
-      } else {
-        let message = 'password does not match confirm password';
-        debug(message);
-        throw new Error(message);
-      }
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.validateLogin = function (item) {
-  return new Promise((resolve, reject) => {
-    try {
-      result = Joi.attempt(item, loginSchema);
+      result = Joi.attempt(item, createSchema);
       resolve(result);
     } catch (err) {
       debug(err);
@@ -75,10 +41,10 @@ module.exports.validateLogin = function (item) {
   });
 };
 
-module.exports.validateToken = function (item) {
+module.exports.validateEntry = function (item) {
   return new Promise((resolve, reject) => {
     try {
-      result = Joi.attempt(item, tokenSchema);
+      result = Joi.attempt(item, entrySchema);
       resolve(result);
     } catch (err) {
       debug(err);
@@ -87,13 +53,13 @@ module.exports.validateToken = function (item) {
   });
 };
 
-module.exports.registerAccount = function (item) {
+module.exports.createRoom = function (item) {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await pool.connect();
       let salt = await bcrypt.genSalt(ROUNDS);
       let passhash = await bcrypt.hash(item.password, salt);
-      var sql = `INSERT INTO accounts (email, passhash) VALUES ('${item.email}', '${passhash}') RETURNING id;`;
+      let sql = `INSERT INTO rooms (roomname, passhash, capacity) VALUES ('${item.roomname}', '${passhash}', '${item.capacity}') RETURNING id;`;
       let result = await db.query(sql);
       resolve(result.rows[0]);
     } catch (err) {
@@ -103,40 +69,54 @@ module.exports.registerAccount = function (item) {
   });
 };
 
-module.exports.verifyAccount = function (item) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let accounts = await db.query(`SELECT * FROM accounts WHERE email = '${item.email}';`);
-      if (accounts.rowCount == 0) {
-        let err = 'account not found for email ' + item.email;
+module.exports.verifyEntry = function (item) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const db = await pool.connect();
+        let rooms = await db.query(`SELECT * FROM rooms WHERE id = '${item.id}';`);
+        if (rooms.rowCount == 0) {
+          let err = 'room not found for id ' + item.id;
+          reject(err);
+        }
+  
+        if (rooms.rowCount > 1) {
+          let err = 'multiple rooms found for id ' + item.id;
+          reject(err);
+        }
+  
+        let room = rooms.rows[0];
+        bcrypt
+          .compare(item.password, room.passhash)
+          .then((result) => {
+            if (result == true) {
+              resolve(result);
+            } else {
+              let message = 'incorrect password';
+              debug(message);
+              reject({ message: message });
+            }
+          })
+          .catch((err) => {
+            debug(err);
+            reject(err);
+          });
+      } catch (err) {
+        debug(err);
         reject(err);
       }
+    });
+  };
 
-      if (accounts.rowCount > 1) {
-        let err = 'multiple accounts found for email ' + item.email;
-        reject(err);
-      }
-
-      let account = accounts.rows[0];
-      bcrypt
-        .compare(item.password, account.passhash)
-        .then((result) => {
-          if (result == true) {
-            resolve(result);
-          } else {
-            let message = 'incorrect password';
-            debug(message);
-            reject({ message: message });
-          }
-        })
-        .catch((err) => {
+module.exports.closeRoom = function(roomId) {
+    return new Promise(async (resolve, reject) => {
+        try {
+          const db = await pool.connect();
+          let sql = `UPDATE rooms SET active=FALSE WHERE id = '${roomId}';`;
+          let result = await db.query(sql);
+          resolve(result);
+        } catch (err) {
           debug(err);
           reject(err);
-        });
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
+        }
+      });
+}

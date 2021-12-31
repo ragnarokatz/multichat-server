@@ -93,7 +93,7 @@ module.exports.registerAccount = function (item) {
       const db = await pool.connect();
       let salt = await bcrypt.genSalt(ROUNDS);
       let passhash = await bcrypt.hash(item.password, salt);
-      var sql = `INSERT INTO accounts (username, passhash) VALUES ('${item.username}', '${passhash}') RETURNING id;`;
+      let sql = `INSERT INTO accounts (username, passhash) VALUES ('${item.username}', '${passhash}') RETURNING id;`;
       let result = await db.query(sql);
       resolve(result.rows[0]);
     } catch (err) {
@@ -141,6 +141,34 @@ module.exports.verifyAccount = function (item) {
   });
 };
 
+module.exports.enterRoom = function (username, roomId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let sql = `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`;
+      let result = await db.query(sql);
+      resolve(result);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};
+
+module.exports.leaveRoom = function (username) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let sql = `UPDATE accounts SET room_id=NULL WHERE username = '${username}';`;
+      let result = await db.query(sql);
+      resolve(result);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};
+
 module.exports.getRoomId = function (username) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -165,32 +193,15 @@ module.exports.getRoomId = function (username) {
   });
 };
 
-module.exports.enterRoom = function (username, roomId) {
+module.exports.getPeopleCount = function(roomId) {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await pool.connect();
-      const result = await db.query(
-        `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`
-      );
-      resolve(result);
+      let count = await db.query(`SELECT COUNT(*) FROM accounts WHERE room_id = '${roomId}';`);
+      resolve(count);
     } catch (err) {
       debug(err);
       reject(err);
     }
   });
-};
-
-module.exports.leaveRoom = function (username) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      const result = await db.query(
-        `UPDATE accounts SET room_id=NULL WHERE username = '${username}';`
-      );
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
+}
