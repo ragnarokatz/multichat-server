@@ -9,7 +9,7 @@ CREATE TABLE accounts (
     id serial PRIMARY KEY,
     username varchar(16) NOT NULL UNIQUE,
     passhash varchar(60) NOT NULL,
-    verified boolean NOT NULL DEFAULT FALSE,
+    verified boolean NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE rooms (
