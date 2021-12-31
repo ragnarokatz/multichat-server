@@ -20,10 +20,6 @@ module.exports.validateChat = function (item) {
   });
 };
 
-module.exports.verifyChat = function (account, chat) {
-  return account.id === chat.account_id;
-};
-
 module.exports.addChat = function (item) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -38,7 +34,7 @@ module.exports.addChat = function (item) {
   });
 };
 
-module.exports.getRoomChats = function (roomId) {
+module.exports.getChatsInRoom = function (roomId) {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await pool.connect();

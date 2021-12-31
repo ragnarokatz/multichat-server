@@ -36,14 +36,6 @@ const loginSchema = Joi.object({
     .required(),
 });
 
-const tokenSchema = Joi.object({
-  token: Joi.string()
-    .regex(/^[a-zA-Z0-9.-_]*$/)
-    .min(50)
-    .max(225)
-    .required(),
-});
-
 module.exports.validateRegister = function (item) {
   return new Promise((resolve, reject) => {
     try {
@@ -67,18 +59,6 @@ module.exports.validateLogin = function (item) {
   return new Promise((resolve, reject) => {
     try {
       result = Joi.attempt(item, loginSchema);
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.validateToken = function (item) {
-  return new Promise((resolve, reject) => {
-    try {
-      result = Joi.attempt(item, tokenSchema);
       resolve(result);
     } catch (err) {
       debug(err);
@@ -141,34 +121,6 @@ module.exports.verifyAccount = function (item) {
   });
 };
 
-module.exports.enterRoom = function (username, roomId) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let sql = `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`;
-      let result = await db.query(sql);
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.leaveRoom = function (username) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let sql = `UPDATE accounts SET room_id=NULL WHERE username = '${username}';`;
-      let result = await db.query(sql);
-      resolve(result);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
 module.exports.getRoomId = function (username) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -186,19 +138,6 @@ module.exports.getRoomId = function (username) {
 
       let roomId = roomIds.rows[0];
       resolve(roomId);
-    } catch (err) {
-      debug(err);
-      reject(err);
-    }
-  });
-};
-
-module.exports.getPeopleCount = function (roomId) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const db = await pool.connect();
-      let count = await db.query(`SELECT COUNT(*) FROM accounts WHERE room_id = '${roomId}';`);
-      resolve(count);
     } catch (err) {
       debug(err);
       reject(err);

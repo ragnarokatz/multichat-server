@@ -119,3 +119,65 @@ module.exports.closeRoom = function (roomId) {
     }
   });
 };
+
+module.exports.enterRoom = function (username, roomId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let sql = `UPDATE accounts SET room_id='${roomId}' WHERE username = '${username}';`;
+      let result = await db.query(sql);
+      resolve(result);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};
+
+module.exports.leaveRoom = function (username) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let sql = `UPDATE accounts SET room_id=NULL WHERE username = '${username}';`;
+      let result = await db.query(sql);
+      resolve(result);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};
+
+module.exports.isRoomAvailable = function (roomId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let result = await db.query(`SELECT active FROM rooms WHERE room_id = '${roomId}';`);
+      if (!result) {
+        let message = `room ${roomId} is not active`;
+        debug(message);
+        throw new Error(message);
+      }
+
+      let count = await db.query(`SELECT COUNT(*) FROM accounts WHERE room_id = '${roomId}';`);
+      let capacity = await db.query(`SELECT capacity FROM rooms WHERE room_id = '${roomId}';`);
+      resolve(count < capacity);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};
+
+module.exports.getAllRooms = function () {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = await pool.connect();
+      let rooms = await db.query(`SELECT * FROM rooms WHERE active = TRUE;`);
+      resolve(rooms.rows);
+    } catch (err) {
+      debug(err);
+      reject(err);
+    }
+  });
+};

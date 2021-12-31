@@ -28,6 +28,7 @@ const checkToken = (req, res, next) => {
     jwt
       .verify(token)
       .then((decoded) => {
+        res.locals.decoded = decoded;
         next();
       })
       .catch((err) => {
@@ -139,16 +140,31 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
     return;
   }
 
-  chats
+  rooms
     .validateEntry(req.body)
     .then((data) => {
-      chats
+      rooms
         .verifyEntry(data)
         .then((result) => {
-          accounts
-            .enterRoom(account_id, req.body.id)
+          rooms
+            .isRoomAvailable(roomId)
             .then((result) => {
-              res.json(result);
+              if (!result) {
+                res.status(404).json({
+                  message: `room ${req.params.room_id} is full`,
+                });
+                return;
+              }
+              rooms
+                .enterRoom(account_id, req.body.id)
+                .then((result) => {
+                  res.json(result);
+                })
+                .catch((err) => {
+                  res.status(404).json({
+                    message: err,
+                  });
+                });
             })
             .catch((err) => {
               res.status(404).json({
@@ -156,11 +172,40 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
               });
             });
         })
-        .catch((err) =>
+        .catch((err) => {
           res.status(404).json({
             message: err,
+          });
+        });
+    })
+    .catch((err) => {
+      res.status(404).json({
+        message: err,
+      });
+    });
+});
+
+app.get('/room/:room_id', checkToken, async (req, res) => {
+  debug('getting all the chats from a room');
+  rooms
+    .isInRoom(account)
+    .then((result) => {
+      if (result) {
+        chats
+          .getChatsInRoom(req.params.room_id)
+          .then((data) => {
+            res.json({ chats: data });
           })
-        );
+          .catch((err) => {
+            res.status(404).json({
+              message: err,
+            });
+          });
+      } else {
+        res.status(404).json({
+          message: `user is currently not in room ${req.params.room_id}`,
+        });
+      }
     })
     .catch((err) => {
       res.status(404).json({
@@ -169,26 +214,27 @@ app.post('/room/:room_id', checkToken, async (req, res) => {
     });
 });
 
-app.get('/room/:room_id', checkToken, async (req, res) => {
-  debug('getting all the chats from a room');
-  chats
-    .getRoomChats(req.params.room_id)
-    .then((data) => {
-      res.json({ chats: data });
-    })
-    .catch((err) => {
-      res.status(404).json({
-        message: err,
-      });
-    });
-});
-
-app.get('/room/:room_id', checkToken, async (req, res) => {
-  debug('getting all the chats from a room');
-  chats
-    .getRoomChats(req.params.room_id)
-    .then((data) => {
-      res.json({ chats: data });
+app.put('/room/:room_id', checkToken, async (req, res) => {
+  debug('leaving a room');
+  accounts
+    .getRoomId(account)
+    .then((roomId) => {
+      if (roomId === req.params.room_id) {
+        rooms
+          .leaveRoom(account)
+          .then((result) => {
+            res.json(result);
+          })
+          .catch((err) => {
+            res.status(404).json({
+              message: err,
+            });
+          });
+      } else {
+        res.status(404).json({
+          message: `user is currently not in room ${req.params.room_id}`,
+        });
+      }
     })
     .catch((err) => {
       res.status(404).json({
